@@ -93,29 +93,26 @@ BX.namespace("BX.MZadubin.Test");
       {
           BX.Vue.event.$off('bx-addresss-input:hints-loaded', this.unblockTypeAccess);
       },
-      methods: {
-        onSpace: function(obEvent)
-        {
-          if (this.sAddress.trim() === "" || this.sAddress.slice(-1) === " ") {
-            obEvent.preventDefault();
-          }
-        },
-        onKeyup: function(obEvent)
-        {
-          var c = String.fromCharCode(obEvent.keyCode);
+      watch: {
+        sAddress: function(sVal) {
           if (
-            this.bIsReadonly
-            ||
-            //TODO!!!! 
-            /^[A-Za-z0-9.,\s\b\0-]+$/.test(c) === false 
-            ||
-            this.sAddress.length < this.obParams.iMinAddressLength
+            sVal.length < this.obParams.iMinAddressLength
           ) {
             return false;
           }
           
           this.bIsReadonly = true;
-          BX.Vue.event.$emit('bx-addresss-input:need-load-hint', {sAddress: this.sAddress.trim() } );
+    
+          BX.Vue.event.$emit('bx-addresss-input:need-load-hint', {sAddress: sVal.trim() } );
+        }
+      },
+      methods: {
+        onSpace: function(obEvent)
+        {
+          //запрещаем пробелы вначале и конце.
+          if (this.sAddress.trim() === "" || this.sAddress.slice(-1) === " ") {
+            obEvent.preventDefault();
+          }
         },
         onConfirm: function(obEvent)
         {
@@ -131,12 +128,11 @@ BX.namespace("BX.MZadubin.Test");
       template: '\
         <form>\
           <input\
-              v-on:keydown.space="onSpace"\
               v-bind:readonly="bIsReadonly"\
               type="text"\
               v-model="sAddress"\
-              v-on:keyup="onKeyup"\
               v-on:keyup.enter="onConfirm"\
+              v-on:keydown.space="onSpace"\
               class="input-address"\
               list="address-suggestion-list"\
               placeholder="Введите адрес"\
