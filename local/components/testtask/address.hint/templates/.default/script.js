@@ -96,6 +96,10 @@ BX.namespace("BX.MZadubin.Test");
         refreshHintsList: function(obEvent)
         {
           var _this = this;
+          //хак. нужен для firefox, который ну умеет нормально отображать изменный datalist
+          //мы удаляем все элементы, и через малое время наполняем их снова
+          //подробнее
+          //https://github.com/mitchhentges/firefox-dynamic-datalist-bug
           this.arItems = [];
           setTimeout(function(){
             _this.arItems = obEvent.arHints;
