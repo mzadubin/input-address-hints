@@ -1,0 +1,13 @@
+
+#test-task-application :read-only, [readonly],[type='readonly'] {
+  color:grey;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+}
+
+
+.input-address{
+    width:400px !important;
+}
