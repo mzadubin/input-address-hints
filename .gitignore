@@ -1,6 +1,9 @@
 /**
 !/.gitignore
 !local
+local/php_interface/*
+!local/php_interface/init.php
 !local/*
 !test
 !test/*
+
