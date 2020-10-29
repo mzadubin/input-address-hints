@@ -100,9 +100,9 @@ BX.namespace("BX.MZadubin.Test");
       },
       template: '\
         <datalist id="address-suggestion-list" >\
-          <li v-for="sText in arItems" >\
-            <option> {{ sText }} </option>\
-          </li>\
+          <option v-for="sText in arItems" :value="sText" >\
+            {{ sText }}\
+          </option>\
         </datalist>\
       '
     });
