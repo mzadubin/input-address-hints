@@ -1,5 +1,24 @@
 BX.namespace("BX.MZadubin.Test");
 
+/**
+ * JS класс в прототипном стиле
+ * реализующий бизнес логику клиентской стороны
+ * тестового задания про поле ввода адреса с подсказками.
+ *
+ * прототтипный стиль исопльзован т.к. в рамках задачи было
+ * принято решение выполнить ее в виде компонента битрикс.
+ * Для компонента битрикс есть свои особенности:
+ * в частности тут нет удобных транслитераторов кода из es6 в es5.
+ *
+ * Если оформлять задачу как отдельный модуль битрикс,
+ * то можно было бы js вынести в "расширения-bitrix" где сборщик битрикса
+ * также автоматически прогоняет JS через babel.
+ * Также для отдельного модуля битрикс можно было бы воспльзоваться webpack и расположить весь Js
+ * как отдельные модули (как и компоненты vue). Но для этой задачи это избыточно. 
+ *
+ * Использование webpack для компонента битрикс является не типичным
+ * (из за особенностей расположения файлов компонента, принятых в данной cms)
+ */
 (function (window) {
   if (!!BX.MZadubin.Test.JAddressHintPrototype){
     return;
@@ -7,12 +26,20 @@ BX.namespace("BX.MZadubin.Test");
  
   BX.MZadubin.Test.JAddressHintPrototype = function()
   {
+    //флаг показывающий делается ли в данный момент ajax запрос
     this.bAjaxLoading = false;
+    //для хранения введенных фраз и их результатов, уже полученных от сервера
     this.obCachedData = {};
     
     this._start();
   };
   
+  /**
+   * действия при инициализации объекта
+   * рисуем форму и слушаем ее
+   * 
+   * @returns void
+   */
   BX.MZadubin.Test.JAddressHintPrototype.prototype._start = function()
   {
     this._initFormComponents();
@@ -21,6 +48,13 @@ BX.namespace("BX.MZadubin.Test");
   }; 
  
  
+  /**
+   * слушаем текуим классом события Vue приложения
+   * чтобы делать запросы к серверу и тд (выносим это из функционала компонентов vue
+   * т.к. у битрикса есть свои механизмы для ajax вместо axios от vue)
+   * 
+   * @returns void
+   */
   BX.MZadubin.Test.JAddressHintPrototype.prototype._subscribeOnFormEvents = function()
   {
     var _this = this;
@@ -30,7 +64,12 @@ BX.namespace("BX.MZadubin.Test");
     BX.Vue.event.$on('bx-addresss-input:need-load-hint', processLoadAddressHints);
   };
   
-  
+  /**
+   * просто создаем на лету компоненты vue дял отрисовки приложения:
+   * инпут и подсказки к нему
+   * 
+   * @returns void
+   */
   BX.MZadubin.Test.JAddressHintPrototype.prototype._initFormComponents = function()
   {
     /**
@@ -144,6 +183,12 @@ BX.namespace("BX.MZadubin.Test");
     
   };
   
+  /**
+   * рисует приложение vue.
+   * в случае необходимости селектор контейнера можно передавать через параметры
+   * 
+   * @returns void
+   */
   BX.MZadubin.Test.JAddressHintPrototype.prototype._drawForm = function()
   {
     BX.Vue.create({ 
@@ -165,24 +210,35 @@ BX.namespace("BX.MZadubin.Test");
   };
 
   
-  BX.MZadubin.Test.JAddressHintPrototype.prototype._processLoadAddressHints = function(obEvent)
+  /**
+   * загружаем подсказки с сервера
+   * испольузем стандартный механизм аякс запросов bitrix для компонентов
+   * 
+   * @param  object obData - поля передаваемые на сервер.
+   * обязательным является поле string sAddress
+   *
+   * @emits 'bx-addresss-input:hints-loaded', {arHints: array }
+   * 
+   * @returns void
+   */
+  BX.MZadubin.Test.JAddressHintPrototype.prototype._processLoadAddressHints = function(obData)
   {
     var _this = this;
     
-    if (obEvent.sAddress in this.obCachedData) {
-      BX.Vue.event.$emit('bx-addresss-input:hints-loaded', {arHints: this.obCachedData[obEvent.sAddress] } );
+    if (obData.sAddress in this.obCachedData) {
+      BX.Vue.event.$emit('bx-addresss-input:hints-loaded', {arHints: this.obCachedData[obData.sAddress] } );
     }
     
     var obRequest = BX.ajax.runComponentAction('testtask:address.hint', 'processLoadAddressHints', {
       mode:'class',
       data: {
         sessid: BX.message('bitrix_sessid'),
-        post: obEvent
+        post: obData
       }
     }).then(function(obResponse) {
       
       if (obResponse.data.arResult.bResult === true) {
-        _this.obCachedData[obEvent.sAddress] = obResponse.data.arResult.arHints;
+        _this.obCachedData[obData.sAddress] = obResponse.data.arResult.arHints;
         
         BX.Vue.event.$emit('bx-addresss-input:hints-loaded', {arHints: obResponse.data.arResult.arHints} );
       } else{
