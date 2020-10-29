@@ -6,7 +6,9 @@ use Bitrix\Main\Engine\ActionFilter;
  
 use Bitrix\Main\Grid\Actions;
 use Bitrix\Main\Web; 
- 
+use \Bitrix\Main\Data\Cache;
+        
+        
 /**
  * класс компонента тестового задания.
  * выводим инпут и к нему по мере ввода подгружает подсказки по введенному адресу
@@ -116,25 +118,50 @@ class CAddressHintComponent extends \CBitrixComponent implements Controllerable
         return true;
     }
     
+  
     /**
-     * Summary
-     * 
+     * получаем из кеша или из удаленнго сервиса список подсказок
      * @param string  $sAddress        запрос адреса
-     * @param int     $iMaxResultCount какое количество подсказок подгружать
      * 
      * @return array    массив найденных подсказок
      */
-    protected function loadHintsByAddressPart(string $sAddress, int $iMaxResultCount = 6)
+    protected function loadHintsByAddressPart(string $sAddress)
     {
-        if (!strlen( trim($sAddress) ) ) {
+        $sClearAddress = trim($sAddress);
+        
+        if (!strlen($sClearAddress) ) {
             return false;
         }
         
+        $obCache = Cache::createInstance();
+        $iCacheTime = 7200;
+        if ($obCache->initCache($iCacheTime, $sClearAddress) ) { 
+            $arHints = $obCache->getVars();
+        } elseif ($obCache->startDataCache() ) {
+            $arHints = $this->callGeoService($sClearAddress);
+            $obCache->endDataCache($arHints);
+        }
+        
+        return $arHints;
+    }
+   
+   
+    /**
+     * метод обращещния по введеному адресу за подсказками
+     * на вншений сервис
+     * 
+     * @param string  $sAddress        Запрс адреса
+     * @param int     $iMaxResultCount количество ответов
+     * 
+     * @return array    
+     */
+    protected function callGeoService(string $sClearAddress, int $iMaxResultCount = 6)
+    {
         try{
             $obApi = new \Yandex\Geo\Api();
     
             // Или можно икать по адресу
-            $obApi->setQuery($sAddress);
+            $obApi->setQuery($sClearAddress);
             
             // Настройка фильтров
             $obApi
@@ -145,13 +172,11 @@ class CAddressHintComponent extends \CBitrixComponent implements Controllerable
             
             $obResponse = $obApi->getResponse();
             
-            // Список найденных точек
             $arCollection = $obResponse->getList();
             $arHints = [];
             foreach ($arCollection as $obItem) {
                 $arHints[] = $obItem->getAddress();
             }
-            
             $sLogingReponse = implode(", ", $arHints);
             
         } catch (\Exception $e) {
