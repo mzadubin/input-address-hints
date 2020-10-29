@@ -190,7 +190,10 @@ class CAddressHintComponent extends \CBitrixComponent implements Controllerable
    
     /**
      * пишем в самодельную таблицу БД запрос пользователя
-     * и ответ от гео сервиса
+     * и ответ от гео сервиса.
+     *
+     * п.с. эту часть можно переписать на ORM API, либо на API инфоблоков либо
+     * делаю так, как быстрее всего в данном случае. (но это не типичный способ для битрикс)
      * 
      * @param string $sSearchString запрос
      * @param string $sGeoResponse  ответ
