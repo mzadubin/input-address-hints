@@ -95,7 +95,11 @@ BX.namespace("BX.MZadubin.Test");
       methods: {
         refreshHintsList: function(obEvent)
         {
-          this.arItems = obEvent.arHints;
+          var _this = this;
+          this.arItems = [];
+          setTimeout(function(){
+            _this.arItems = obEvent.arHints;
+          }, 200);
         }
       },
       template: '\
@@ -133,8 +137,10 @@ BX.namespace("BX.MZadubin.Test");
           BX.Vue.event.$off('bx-addresss-input:hints-loaded', this.unblockTypeAccess);
       },
       watch: {
-        sAddress: function(sVal) {
+        sAddress: function(sVal, sOldVal) {
           if (
+            sVal === sOldVal
+            ||
             sVal.length < this.obParams.iMinAddressLength
           ) {
             return false;
@@ -167,6 +173,7 @@ BX.namespace("BX.MZadubin.Test");
       template: '\
         <form>\
           <input\
+              autocomplete="off"\
               v-bind:readonly="bIsReadonly"\
               type="text"\
               v-model="sAddress"\
